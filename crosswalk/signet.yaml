@@ -343,6 +343,31 @@ integrations:
     notes: "@signet_sign decorator signs any Python function call"
 
 # ─────────────────────────────────────────────────
+# COMPOSE WITH
+# How Signet receipts compose with neighboring layers via shared action
+# identity. Documented for cross-layer verifiers that need to bind a
+# Signet receipt to attestations produced by a different system.
+# ─────────────────────────────────────────────────
+compose_with:
+  - system: aeoess-aps
+    crosswalk: crosswalk/aeoess-aps.yaml
+    binding: action_identity
+    notes: >
+      APS `computeActionRef(agentId, actionType, scope)` produces
+      `SHA-256(agentId || "|" || actionType || "|" || canonicalizeJCS(scope))`.
+      Signet `action.params_hash` produces `SHA-256(canonicalizeJCS(params))`.
+      Both are valid content-addressed action identities but bind different
+      domains: APS folds agent identity + action type into the hash; Signet
+      hashes only params and keeps signer identity on the separately-signed
+      `signer.pubkey` field. These are complementary, not interchangeable.
+    cross_layer_verifier_recipe: >
+      To bind a Signet receipt to an APS attestation covering the same
+      action, compare the tuple `(signer.pubkey, action.tool, action.params_hash)`
+      from Signet against the single `action_ref` hash from APS.
+      Functionally equivalent for the "is this the same action" question;
+      distinct in which fields enter the hash domain.
+
+# ─────────────────────────────────────────────────
 # CROSS-REFERENCES
 # ─────────────────────────────────────────────────
 cross_references:
